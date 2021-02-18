@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Covid-19 em Chapecó</title>
+    <script src="https://www.chartjs.org/dist/2.9.4/Chart.min.js"></script>
+    <script></script>
+    <script>
+        window.chartColors = {
+            red: 'rgb(255, 99, 132)',
+            orange: 'rgb(255, 159, 64)',
+            yellow: 'rgb(255, 205, 86)',
+            green: 'rgb(75, 192, 192)',
+            blue: 'rgb(54, 162, 235)',
+            purple: 'rgb(153, 102, 255)',
+            grey: 'rgb(201, 203, 207)'
+        };
+        const formatDate = strDate => {
+            const date = new Date(strDate);
+            const dia = date.getDate().toString().padStart(2, '0'),
+                mes = (date.getMonth() + 1).toString().padStart(2, '0'),
+                ano = date.getFullYear();
+            return dia + "/" + mes + "/" + ano;
+        };
+    </script>
+</head>
+
+<body>
+    <div style="width:75%;">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const renderGraph = data => {
+            const dates = data.map(item => formatDate(item.date));
+
+            const config = {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'UTI Pública',
+                            fill: false,
+                            backgroundColor: window.chartColors.red,
+                            borderColor: window.chartColors.red,
+                            data: data.map(item => item.UTIPublica),
+                        },
+                        {
+                            label: 'UTI Privada',
+                            fill: false,
+                            backgroundColor: window.chartColors.blue,
+                            borderColor: window.chartColors.blue,
+                            data: data.map(item => item.UTIPrivada),
+                        },
+                        {
+                            label: 'UTI HRO',
+                            fill: false,
+                            backgroundColor: window.chartColors.orange,
+                            borderColor: window.chartColors.orange,
+                            data: data.map(item => item.UTIHospitalRegional),
+                        },
+                        {
+                            label: 'UTI Unimed',
+                            fill: false,
+                            backgroundColor: window.chartColors.purple,
+                            borderColor: window.chartColors.purple,
+                            data: data.map(item => item.UTIUnimed),
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: 'Ocupação de leitos em Chapecó'
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Data'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: '%'
+                            }
+                        }]
+                    }
+                }
+            };
+
+            const colorNames = Object.keys(window.chartColors);
+            const ctx = document.getElementById('canvas').getContext('2d');
+            new Chart(ctx, config);
+        };
+
+        window.onload = function () {
+            fetch('/data')
+                .then(response => response.json())
+                .then(response => {
+                    if (!response.status)
+                        return erroDados();
+
+                    renderGraph(response.data);
+                })
+                .catch(e => {
+                    console.error(e);
+                    erroDados();
+                });
+        };
+    </script>
+</body>
+
+</html>
